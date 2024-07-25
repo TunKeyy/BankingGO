@@ -194,3 +194,11 @@ Also have a look at the [FAQ](FAQ.md).
 ---
 
 Looking for alternatives? [https://awesome-go.com/#database](https://awesome-go.com/#database).
+
+
+# Migration
+
+## Create migrations
+```
+migrate create -ext sql -dir db/migration -seq init_schema
+```
