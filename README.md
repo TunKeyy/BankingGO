@@ -202,3 +202,16 @@ Looking for alternatives? [https://awesome-go.com/#database](https://awesome-go.
 ```
 migrate create -ext sql -dir db/migration -seq init_schema
 ```
+
+# AWS
+## Get secret from secret manager
+
+```
+aws secretsmanager get-secret-value --secret-id simple_bank --query SecretString --output text
+```
+This command will return a json format of secret values
+
+```
+aws secretsmanager get-secret-value --secret-id simple_bank --query SecretString --output text | jq -r 'to_entries|map("\(.key)=\(.value)")|.[]'
+```
+This command will convert .json format to .env format
