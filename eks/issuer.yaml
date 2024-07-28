@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer # Issuer - used for only 1 ns, Cluster Issuer used for all ns
+metadata:
+  name: letsencrypt
+spec:
+  acme:
+    email: ntkha71@gmail.com
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-issuer-account-key
+    solvers:
+    - http01:
+        ingress:
+          ingressClassName: nginx
