@@ -24,4 +24,10 @@ Connect to server
 evans --host localhost --port 9090 -r repl
 ```
 
+If it doesn't work, try using this coommand:
+```
+evans --proto proto/service_simple_bank.proto --host localhost --port 9090 repl
+```
+
 *Don't forget to start server first
+

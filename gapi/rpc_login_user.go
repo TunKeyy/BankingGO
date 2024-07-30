@@ -9,20 +9,21 @@ import (
 	"github.com/TunKeyy/BankingGO/util"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (*pb.LoginUserResponse, error) {
 	user, err := server.store.GetUser(ctx, req.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, status.Errorf(codes.NotFound, "User not found")
+			return nil, status.Errorf(codes.NotFound, "user not found")
 		}
 		return nil, status.Errorf(codes.Internal, "failed to login user")
 	}
 
 	err = util.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "password is not correct")
+		return nil, status.Errorf(codes.NotFound, "password is not correct")
 	}
 
 	accessToken, accessPayload, err := server.tokenMaker.CreateToken(
@@ -30,7 +31,7 @@ func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (
 		server.config.AccessTokenDuration,
 	)
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "password is not correct")
+		return nil, status.Errorf(codes.Internal, "fail to create access token")
 	}
 
 	refreshToken, refreshPayload, err := server.tokenMaker.CreateToken(
@@ -39,31 +40,31 @@ func (server *Server) LoginUser(ctx context.Context, req *pb.LoginUserRequest) (
 	)
 
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "password is not correct")
+		return nil, status.Errorf(codes.Internal, "fail to create refresh token")
 	}
 
+	mtdt := server.extractMetadata(ctx)
 	session, err := server.store.CreateSession(ctx, db.CreateSessionParams{
 		ID:           refreshPayload.ID,
 		Username:     user.Username,
 		RefreshToken: refreshToken,
-		UserAgent:    ctx.Request.UserAgent(),
-		ClientIp:     ctx.ClientIP(),
+		UserAgent:    mtdt.UserAgent,
+		ClientIp:     mtdt.ClientIP,
 		IsBlocked:    false,
 		ExpiresAt:    refreshPayload.ExpiredAt,
 	})
 
 	if err != nil {
-		return nil, status.Errorf(codes.Unauthenticated, "password is not correct")
+		return nil, status.Errorf(codes.Internal, "fail to create session")
 	}
 
 	rsp := &pb.LoginUserResponse{
 		User:                  convertUser(user),
-		SessionID:             as,
+		SessionId:             session.ID.String(),
 		AccessToken:           accessToken,
-		AccessTokenExpiresAt:  accessPayload.ExpiredAt,
+		AccessTokenExpiresAt:  timestamppb.New(accessPayload.ExpiredAt),
 		RefreshToken:          refreshToken,
-		RefreshTokenExpiresAt: refreshPayload.ExpiredAt,
-		User:                  newUserResponse(user),
+		RefreshTokenExpiresAt: timestamppb.New(refreshPayload.ExpiredAt),
 	}
-	return nil, status.Errorf(codes.Unimplemented, "method LoginUser not implemented")
+	return rsp, nil
 }
