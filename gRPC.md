@@ -31,3 +31,8 @@ evans --proto proto/service_simple_bank.proto --host localhost --port 9090 repl
 
 *Don't forget to start server first
 
+See more about integrate grpc in https://grpc.io/docs/languages/go/quickstart/
+
+
+## For gRPC gateway session - follow the following link:
+https://github.com/grpc-ecosystem/grpc-gateway
