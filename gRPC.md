@@ -36,3 +36,6 @@ See more about integrate grpc in https://grpc.io/docs/languages/go/quickstart/
 
 ## For gRPC gateway session - follow the following link:
 https://github.com/grpc-ecosystem/grpc-gateway
+
+
+export PATH="$PATH:$(go env GOPATH)/bin"
