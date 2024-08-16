@@ -10,6 +10,7 @@ import (
 	db "github.com/TunKeyy/BankingGO/db/sqlc"
 	_ "github.com/TunKeyy/BankingGO/doc/statik"
 	"github.com/TunKeyy/BankingGO/gapi"
+	"github.com/TunKeyy/BankingGO/mail"
 	"github.com/TunKeyy/BankingGO/pb"
 	"github.com/TunKeyy/BankingGO/util"
 	"github.com/TunKeyy/BankingGO/worker"
@@ -51,7 +52,7 @@ func main() {
 	}
 
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
-	runTaskProccessor(redisOpt, store)
+	runTaskProccessor(config, redisOpt, store)
 	go runGatewayServer(config, store, taskDistributor)
 	runGrpcServer(config, store, taskDistributor)
 }
@@ -69,8 +70,9 @@ func runDBMigration(migrationURL string, dbSource string) {
 	log.Info().Msg("db migrated successfully")
 }
 
-func runTaskProccessor(redisOpt asynq.RedisClientOpt, store db.Store) {
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store)
+func runTaskProccessor(config util.Config, redisOpt asynq.RedisClientOpt, store db.Store) {
+	mailer := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer)
 	log.Info().Msg("start task processor")
 	err := taskProcessor.Start()
 	if err != nil {
