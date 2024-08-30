@@ -3,10 +3,15 @@ kind: Service
 metadata:
   name: simple-bank-api-service
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: simple-bank-api
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8080
+      targetPort: http-server
+      name: http-service
+    - protocol: TCP
+      port: 90
+      targetPort: grpc-server
+      name: grpc-service
